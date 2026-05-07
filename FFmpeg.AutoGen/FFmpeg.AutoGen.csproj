@@ -23,5 +23,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <None Include="buildTransitive\**\*" Pack="true" PackagePath="buildTransitive\%(RecursiveDir)" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,100 @@
+<Project>
+  <Target Name="FFmpegAutoGenDownloadRuntimeBinaries"
+          BeforeTargets="AssignTargetPaths;ComputeFilesToPublish"
+          Condition="'$(FFmpegAutoGenEnableRuntimeBinariesDownload)' == 'true' and '$(IsCrossTargetingBuild)' != 'true' and '$(RuntimeIdentifier)' == 'win-x64' and '$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_FFmpegAutoGenRuntimeBinariesVersion Condition="'$(FFmpegAutoGenRuntimeBinariesVersion)' == ''">8.1</_FFmpegAutoGenRuntimeBinariesVersion>
+      <_FFmpegAutoGenRuntimeBinariesVersion Condition="'$(FFmpegAutoGenRuntimeBinariesVersion)' != ''">$(FFmpegAutoGenRuntimeBinariesVersion)</_FFmpegAutoGenRuntimeBinariesVersion>
+      <_FFmpegAutoGenRuntimeBinariesIncludeExes Condition="'$(FFmpegAutoGenRuntimeBinariesIncludeExes)' == ''">false</_FFmpegAutoGenRuntimeBinariesIncludeExes>
+      <_FFmpegAutoGenRuntimeBinariesIncludeExes Condition="'$(FFmpegAutoGenRuntimeBinariesIncludeExes)' != ''">$(FFmpegAutoGenRuntimeBinariesIncludeExes)</_FFmpegAutoGenRuntimeBinariesIncludeExes>
+      <_FFmpegAutoGenRuntimeBinariesForce Condition="'$(FFmpegAutoGenRuntimeBinariesForce)' == ''">false</_FFmpegAutoGenRuntimeBinariesForce>
+      <_FFmpegAutoGenRuntimeBinariesForce Condition="'$(FFmpegAutoGenRuntimeBinariesForce)' != ''">$(FFmpegAutoGenRuntimeBinariesForce)</_FFmpegAutoGenRuntimeBinariesForce>
+      <_FFmpegAutoGenRuntimeBinariesArchiveName>ffmpeg-$(_FFmpegAutoGenRuntimeBinariesVersion)-full_build-shared.zip</_FFmpegAutoGenRuntimeBinariesArchiveName>
+      <_FFmpegAutoGenRuntimeBinariesUrl>https://github.com/GyanD/codexffmpeg/releases/download/$(_FFmpegAutoGenRuntimeBinariesVersion)/$(_FFmpegAutoGenRuntimeBinariesArchiveName)</_FFmpegAutoGenRuntimeBinariesUrl>
+      <_FFmpegAutoGenRuntimeBinariesWorkFolder>$(IntermediateOutputPath)FFmpeg.AutoGen/RuntimeBinaries/$(_FFmpegAutoGenRuntimeBinariesVersion)/</_FFmpegAutoGenRuntimeBinariesWorkFolder>
+      <_FFmpegAutoGenRuntimeBinariesDownloadFolder>$(_FFmpegAutoGenRuntimeBinariesWorkFolder)download/</_FFmpegAutoGenRuntimeBinariesDownloadFolder>
+      <_FFmpegAutoGenRuntimeBinariesExtractFolder>$(_FFmpegAutoGenRuntimeBinariesWorkFolder)extract/</_FFmpegAutoGenRuntimeBinariesExtractFolder>
+      <_FFmpegAutoGenRuntimeBinariesNativeFolder>$(_FFmpegAutoGenRuntimeBinariesWorkFolder)runtimes/$(RuntimeIdentifier)/native/</_FFmpegAutoGenRuntimeBinariesNativeFolder>
+      <_FFmpegAutoGenRuntimeBinariesShouldDownload>false</_FFmpegAutoGenRuntimeBinariesShouldDownload>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_FFmpegAutoGenExistingRuntimeDll Include="$(_FFmpegAutoGenRuntimeBinariesNativeFolder)avcodec-*.dll" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <_FFmpegAutoGenRuntimeBinariesShouldDownload Condition="'@(_FFmpegAutoGenExistingRuntimeDll)' == '' or '$(_FFmpegAutoGenRuntimeBinariesForce)' == 'true'">true</_FFmpegAutoGenRuntimeBinariesShouldDownload>
+    </PropertyGroup>
+
+    <Message Importance="High"
+             Text="FFmpeg DLLs already exist in $(_FFmpegAutoGenRuntimeBinariesNativeFolder)"
+             Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' != 'true'" />
+    <Message Importance="High"
+             Text="Set FFmpegAutoGenRuntimeBinariesForce=true to overwrite, or delete the existing FFmpeg DLLs manually."
+             Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' != 'true'" />
+
+    <RemoveDir Directories="$(_FFmpegAutoGenRuntimeBinariesDownloadFolder);$(_FFmpegAutoGenRuntimeBinariesExtractFolder);$(_FFmpegAutoGenRuntimeBinariesNativeFolder)"
+               Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'" />
+    <MakeDir Directories="$(_FFmpegAutoGenRuntimeBinariesDownloadFolder);$(_FFmpegAutoGenRuntimeBinariesExtractFolder);$(_FFmpegAutoGenRuntimeBinariesNativeFolder)"
+             Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'" />
+
+    <Message Importance="High"
+             Text="Downloading FFmpeg $(_FFmpegAutoGenRuntimeBinariesVersion) from $(_FFmpegAutoGenRuntimeBinariesUrl)"
+             Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'" />
+    <DownloadFile SourceUrl="$(_FFmpegAutoGenRuntimeBinariesUrl)"
+                  DestinationFolder="$(_FFmpegAutoGenRuntimeBinariesDownloadFolder)"
+                  DestinationFileName="$(_FFmpegAutoGenRuntimeBinariesArchiveName)"
+                  Retries="3"
+                  RetryDelayMilliseconds="5000"
+                  SkipUnchangedFiles="false"
+                  Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'">
+      <Output TaskParameter="DownloadedFile" ItemName="_FFmpegAutoGenRuntimeBinariesArchive" />
+    </DownloadFile>
+
+    <Message Importance="High"
+             Text="Extracting..."
+             Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'" />
+    <Unzip SourceFiles="@(_FFmpegAutoGenRuntimeBinariesArchive)"
+           DestinationFolder="$(_FFmpegAutoGenRuntimeBinariesExtractFolder)"
+           OverwriteReadOnlyFiles="true"
+           SkipUnchangedFiles="false"
+           Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'" />
+
+    <ItemGroup Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'">
+      <_FFmpegAutoGenRuntimeDll Include="$(_FFmpegAutoGenRuntimeBinariesExtractFolder)ffmpeg-*/bin/*.dll" />
+      <_FFmpegAutoGenRuntimeExe Include="$(_FFmpegAutoGenRuntimeBinariesExtractFolder)ffmpeg-*/bin/*.exe"
+                                Condition="'$(_FFmpegAutoGenRuntimeBinariesIncludeExes)' == 'true'" />
+    </ItemGroup>
+
+    <Error Text="No DLL files found under $(_FFmpegAutoGenRuntimeBinariesExtractFolder)ffmpeg-*/bin/."
+           Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true' and '@(_FFmpegAutoGenRuntimeDll)' == ''" />
+
+    <Copy SourceFiles="@(_FFmpegAutoGenRuntimeDll)"
+          DestinationFolder="$(_FFmpegAutoGenRuntimeBinariesNativeFolder)"
+          OverwriteReadOnlyFiles="true"
+          Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'" />
+
+    <Copy SourceFiles="@(_FFmpegAutoGenRuntimeExe)"
+          DestinationFolder="$(_FFmpegAutoGenRuntimeBinariesNativeFolder)"
+          OverwriteReadOnlyFiles="true"
+          Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true' and '$(_FFmpegAutoGenRuntimeBinariesIncludeExes)' == 'true' and '@(_FFmpegAutoGenRuntimeExe)' != ''" />
+
+    <ItemGroup>
+      <_FFmpegAutoGenRuntimeBinary Include="$(_FFmpegAutoGenRuntimeBinariesNativeFolder)*.dll" />
+      <_FFmpegAutoGenRuntimeBinary Include="$(_FFmpegAutoGenRuntimeBinariesNativeFolder)*.exe"
+                                   Condition="'$(_FFmpegAutoGenRuntimeBinariesIncludeExes)' == 'true'" />
+      <None Include="@(_FFmpegAutoGenRuntimeBinary)">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+        <TargetPath>runtimes/$(RuntimeIdentifier)/native/%(_FFmpegAutoGenRuntimeBinary.Filename)%(_FFmpegAutoGenRuntimeBinary.Extension)</TargetPath>
+      </None>
+      <FileWrites Include="@(_FFmpegAutoGenRuntimeBinary)" />
+    </ItemGroup>
+
+    <Message Importance="High"
+             Text="Done! FFmpeg $(_FFmpegAutoGenRuntimeBinariesVersion) binaries added under runtimes/$(RuntimeIdentifier)/native."
+             Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'" />
+    <RemoveDir Directories="$(_FFmpegAutoGenRuntimeBinariesDownloadFolder);$(_FFmpegAutoGenRuntimeBinariesExtractFolder)"
+               Condition="'$(_FFmpegAutoGenRuntimeBinariesShouldDownload)' == 'true'" />
+  </Target>
+</Project>

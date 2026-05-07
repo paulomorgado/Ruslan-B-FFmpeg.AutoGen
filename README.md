@@ -45,6 +45,17 @@ NuGet packages also include `tools\download-ffmpeg-runtime.ps1` and `tools\downl
 ```bash
 ./tools/download-ffmpeg-runtime.sh --destination-folder ./bin/x64
 ```
+Projects that reference the NuGet package can also opt in to downloading the run-time binaries during build:
+```xml
+<PropertyGroup>
+  <FFmpegAutoGenEnableRuntimeBinariesDownload>true</FFmpegAutoGenEnableRuntimeBinariesDownload>
+  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  <FFmpegAutoGenRuntimeBinariesVersion>8.1</FFmpegAutoGenRuntimeBinariesVersion>
+  <FFmpegAutoGenRuntimeBinariesIncludeExes>false</FFmpegAutoGenRuntimeBinariesIncludeExes>
+  <FFmpegAutoGenRuntimeBinariesForce>false</FFmpegAutoGenRuntimeBinariesForce>
+</PropertyGroup>
+```
+Downloaded binaries are added as `None` items and copied to output and publish directories under `runtimes/$(RuntimeIdentifier)/native`. The target only runs when `RuntimeIdentifier` is `win-x64`.
 Please check the example project, it shows how to specify the path to libraries.
 
 - on OS X:  
