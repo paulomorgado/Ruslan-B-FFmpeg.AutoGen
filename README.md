@@ -38,9 +38,12 @@ Run the download script to get the required DLLs:
 ```powershell
 .\FFmpeg\download-ffmpeg.ps1
 ```
-NuGet packages also include a `tools\download-ffmpeg-runtime.ps1` helper that copies only the FFmpeg run-time binaries to your application output folder:
+NuGet packages also include `tools\download-ffmpeg-runtime.ps1` and `tools\download-ffmpeg-runtime.sh` helpers that copy only the FFmpeg run-time binaries to your application output folder:
 ```powershell
 .\tools\download-ffmpeg-runtime.ps1 -DestinationFolder .\bin\x64
+```
+```bash
+./tools/download-ffmpeg-runtime.sh --destination-folder ./bin/x64
 ```
 Please check the example project, it shows how to specify the path to libraries.
 

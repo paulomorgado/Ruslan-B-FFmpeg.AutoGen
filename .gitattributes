@@ -9,6 +9,7 @@ FFmpeg/* linguist-vendored
 *.vbproj merge=union
 *.fsproj merge=union
 *.dbproj merge=union
+*.sh     text eol=lf
 # Standard to msysgit
 *.doc	 diff=astextplain
 *.DOC	 diff=astextplain
